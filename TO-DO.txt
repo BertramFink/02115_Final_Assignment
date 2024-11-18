@@ -1,0 +1,5 @@
+- index function, match fp
+- register manipulation functions
+- Parsing function (index instruction(opcode, format, osv)) 
+- switch statement for instructions
+- main loop 
