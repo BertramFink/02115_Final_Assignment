@@ -1,3 +1,5 @@
 *
 !.gitignore
+!/tests
+!/tests/**
 !*.c
