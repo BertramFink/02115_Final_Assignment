@@ -1,5 +1,20 @@
-- index function, match fp
-- register manipulation functions
-- Parsing function (index instruction(opcode, format, osv)) 
-- switch statement for instructions
-- main loop 
+- index function, match fp                                  [ansvar til 25/11/2024: SEBATIAN]
+- register manipulation functions                           [ansvar til 25/11/2024: SEBATIAN]
+- Parsing function (index instruction(opcode, format, osv)) [ansvar til 25/11/2024: KARL]
+- switch statement for instructions                         [ansvar til 25/11/2024: KARL]
+- main loop                                                 
+
+register file:
+  int rRead(0-31);
+  void rWrite(0-31, int);
+
+  loop {
+    instructionMemory[pc];
+    -> håndter instruktion
+    pc += 4;
+  }
+
+  // Add instruction
+  if (opcode = 0b01010) {
+    rwrite(z, rRead(x) + rRead(y));
+  }
