@@ -83,9 +83,12 @@ int main(int argc, char *argv[]) {
 
   initIMem(argv[1]);
   rf = (struct RegisterFile *) malloc(sizeof(struct RegisterFile));
+  rf->PC = 0;
 
-  for (rf->PC = 0; rf->PC < iMem->length; rf->PC += 4) {
-    printf("%4d: 0x%08x\n", rf->PC, memRead(iMem, rf->PC));
+  while (rf->PC < iMem->length) {
+    int instruction = memRead(iMem, rf->PC);
+    printf("%4d: 0x%08x\n", rf->PC, instruction);
+    rf->PC += 4;
   }
 
   printRegisterFile();
