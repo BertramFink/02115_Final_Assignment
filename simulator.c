@@ -40,6 +40,12 @@ void regWrite(size_t index, int value) {
   }
 }
 
+int bits(int source, int high, int low) {
+  int width = high - low + 1;
+  int mask = (1 << width) - 1;
+  return (source >> low) & mask; 
+}
+
 void initIMem(char *fileName) {
   FILE *file = fopen(fileName, "rb");
   if (file == NULL) {
