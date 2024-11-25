@@ -165,26 +165,48 @@ int binToDec(int bin[],int size){
   return sum;
 }
 
-struct Instruction parsing(int instruction){
+void executeMathReg(struct Rtype instruction) {
+  
+}
+
+void executeMathImm(struct Rtype instruction) {
+  
+}
+
+void execute(int instruction){
   int opcode = bits(instruction,6,0);
-  if (opcode == 51){
-  //Opcode R
+  // if (opcode == 51){
+  // //Opcode R
+  // }
+  // else if (opcode == 19 || opcode == 3 || opcode == 103 || opcode ==105 || opcode == 23){
+  // //opcode I
+  // }
+  // else if (opcode == 35){
+  // //opcode S
+  // }
+  // else if(opcode == 99){
+  // //opcode B
+  // }
+  // else if (opcode == 55){
+  // //upcode U
+  // }
+  // else if (opcode == 111){
+  // //upcode J
+  // }
+
+  switch (opcode) {
+    case 0b0110011: executeMathReg(parseRtype(instruction)); break;
+    case 0b0010011: executeMathImm(parseItype(instruction)); break;
+    case 3: break;
+    case 103: break;
+    case 105: break;
+    case 23: break;
+    case 35: break;
+    case 99: break;
+    case 55: break;
+    case 111: break;
   }
-  else if (opcode == 19 || opcode == 3 || opcode == 103 || opcode ==105 || opcode == 23){
-  //opcode I
-  }
-  else if (opcode == 35){
-  //opcode S
-  }
-  else if(opcode == 99){
-  //opcode B
-  }
-  else if (opcode == 55){
-  //upcode U
-  }
-  else if (opcode == 111){
-  //upcode J
-  }
+
 }
 
 
