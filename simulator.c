@@ -15,7 +15,6 @@ struct RegisterFile {
 
 struct Rtype
 {
-  int opcode;
   int rd;
   int fucnt3;
   int rs1;
@@ -24,7 +23,6 @@ struct Rtype
 };
 struct Itype
 {
-  int opcode;
   int rd;
   int fucnt3;
   int rs1;
@@ -32,7 +30,6 @@ struct Itype
 };
 struct Stype
 {
-  int opcode;
   int rd;
   int fucnt3;
   int rs1;
@@ -41,7 +38,6 @@ struct Stype
 };
 struct Btype
 {
-  int opcode;
   int rd;
   int fucnt3;
   int rs1;
@@ -50,13 +46,11 @@ struct Btype
 };
 struct Utype
 {
-  int opcode;
   int rd;
   int imm;
 };
 struct Jtype
 {
-  int opcode;
   int rd;
   int imm;
 };
