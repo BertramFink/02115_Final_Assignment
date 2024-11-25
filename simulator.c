@@ -20,6 +20,54 @@ struct Instruction
   int instruction[32];
 };
 
+struct Rtype
+{
+  int opcode;
+  int rd;
+  int fucnt3;
+  int rs1;
+  int rs2;
+  int funct7;
+};
+struct Itype
+{
+  int opcode;
+  int rd;
+  int fucnt3;
+  int rs1;
+  int imm;
+};
+struct Stype
+{
+  int opcode;
+  int rd;
+  int fucnt3;
+  int rs1;
+  int rs2;
+  int imm;
+};
+struct Btype
+{
+  int opcode;
+  int rd;
+  int fucnt3;
+  int rs1;
+  int rs2;
+  int imm;
+};
+struct Utype
+{
+  int opcode;
+  int rd;
+  int imm;
+};
+struct Jtype
+{
+  int opcode;
+  int rd;
+  int imm;
+};
+
 
 struct Memory *iMem;
 
@@ -80,9 +128,9 @@ void printRegisterFile() {
 }
 
 
-struct Instruction getInstruction(struct Memory* mem, int Line){
+struct Instruction getInstruction(struct Memory* mem, int pc){
   struct Instruction current;
-  int num = mem->buffer[0+4*Line]+(mem->buffer[1+4*Line]<<8)+(mem->buffer[2+4*Line]<<16)+(mem->buffer[3+4*Line]<<24);
+  int num = mem->buffer[0+pc]+(mem->buffer[1+4*pc]<<8)+(mem->buffer[2+4*pc]<<16)+(mem->buffer[3+4*pc]<<24);
   for(int i = 0;i<=31;i++){
     current.instruction[i] = (num >> i) & 1;
   }
@@ -112,6 +160,31 @@ int binToDec(int bin[],int size){
   return sum;
 }
 
+struct Instruction parsing (struct Memory* mem, int pc){
+  struct Instruction current;
+  current = getInstruction(mem,pc);
+  printInstruction(current);
+  current.opcode = binToDec(current.opcodeInstruction,7);
+  printf("\n%d\n",current.opcode);
+  if (current.opcode == 51){
+  //Opcode R
+  }
+  else if (current.opcode == 19 || current.opcode == 3 || current.opcode == 103 || current.opcode ==105 || current.opcode == 23){
+  //opcode I
+  }
+  else if (current.opcode == 35){
+  //   //opcode S
+  }
+  else if(current.opcode == 99){
+  //   //opcode B
+  }
+  else if (current.opcode == 55){
+  //   //upcode U
+  }
+  else if (current.opcode == 111){
+  //   //upcode J
+  }
+}
 
 
 int main(int argc, char *argv[]) {
@@ -130,125 +203,119 @@ int main(int argc, char *argv[]) {
   printRegisterFile();
   printf("%08x\n",memRead(iMem,0));
 
-
-  struct Instruction current;
-  current =  getInstruction(iMem,2);
-  printInstruction(current);
-  current.opcode = binToDec(current.opcodeInstruction,7);
-
-
-  printf("\n%d\n",current.opcode);
+  rf->PC = 0;
+  parsing(iMem,rf->PC);
   
-  if (current.opcode == 51){
-    //Opcode R
-    int rd[5];
-    for(int i = 7 ;i<=11;i++){
-      rd[i-7] = current.instruction[i];
-    }
-    int fucnt3[3];
-    for(int i = 12 ;i<=14;i++){
-      fucnt3[i-12] = current.instruction[i];
-    }
-    int rs1[5];
-    for(int i = 15 ;i<=19;i++){
-      rs1[i-15] = current.instruction[i];
-    }
-    int rs2[5];
-    for(int i = 20 ;i<=24;i++){
-      rs2[i-20] = current.instruction[i];
-    }
-    int funct7[7];
-    for(int i = 25 ;i<=31;i++){
-      funct7[i-25] = current.instruction[i];
-    }
-  }
-  else if (current.opcode == 19 || current.opcode == 3 || current.opcode == 103 || current.opcode ==105 || current.opcode == 23){
-    //opcode I
-    int rd[5];
-    for(int i = 7 ;i<=11;i++){
-      rd[i-7] = current.instruction[i];
-    }
-    int funct3[3];
-    for(int i = 12 ;i<=14;i++){
-      funct3[i-12] = current.instruction[i];
-    }
-    int rs1[5];
-    for(int i = 15 ;i<=19;i++){
-      rs1[i-15] = current.instruction[i];
-    }
-    int imm[12];
-    for(int i = 20 ;i<=31;i++){
-      imm[i-20] = current.instruction[i];
-    }
-  }
-  else if (current.opcode == 35){
-    //opcode S
-    int rd[5];
-    for(int i = 7 ;i<=11;i++){
-      rd[i-7] = current.instruction[i];
-    }
-    int funct3[3];
-    for(int i = 12 ;i<=14;i++){
-      funct3[i-12] = current.instruction[i];
-    }
-    int rs1[5];
-    for(int i = 15 ;i<=19;i++){
-      rs1[i-15] = current.instruction[i];
-    }
-    int rs2[5];
-    for(int i = 20 ;i<=24;i++){
-      rs2[i-20] = current.instruction[i];
-    }
-    int imm[7];
-    for(int i = 25 ;i<=31;i++){
-      imm[i-25] = current.instruction[i];
-    }
-  }
-  else if(current.opcode == 99){
-    //opcode B
-    int rd[5];
-    for(int i = 7 ;i<=11;i++){
-      rd[i-7] = current.instruction[i];
-    }
-    int funct3[3];
-    for(int i = 12 ;i<=14;i++){
-      funct3[i-12] = current.instruction[i];
-    }
-    int rs1[5];
-    for(int i = 15 ;i<=19;i++){
-      rs1[i-15] = current.instruction[i];
-    }
-    int rs2[5];
-    for(int i = 20 ;i<=24;i++){
-      rs2[i-20] = current.instruction[i];
-    }
-    int imm[7];
-    for(int i = 25 ;i<=31;i++){
-      imm[i-25] = current.instruction[i];
-    }
-  }
-  else if (current.opcode == 55){
-    //upcode U
-    int rd[5];
-    for(int i = 7 ;i<=11;i++){
-      rd[i-7] = current.instruction[i];
-    }
-    int imm[20];
-    for(int i = 12 ;i<=31;i++){
-      imm[i-12] = current.instruction[i];
-    }
-  }
-  else if (current.opcode == 111){
-    //upcode J
-    int rd[5];
-    for(int i = 7 ;i<=11;i++){
-      rd[i-7] = current.instruction[i];
-    }
-    int imm[20];
-    for(int i = 12 ;i<=31;i++){
-      imm[i-12] = current.instruction[i];
-    }
-  }
+  // if (current.opcode == 51){
+  //   //Opcode R
+  //   int rd[5];
+  //   for(int i = 7 ;i<=11;i++){
+  //     rd[i-7] = current.instruction[i];
+  //   }
+  //   int fucnt3[3];
+  //   for(int i = 12 ;i<=14;i++){
+  //     fucnt3[i-12] = current.instruction[i];
+  //   }
+  //   int rs1[5];
+  //   for(int i = 15 ;i<=19;i++){
+  //     rs1[i-15] = current.instruction[i];
+  //   }
+  //   int rs2[5];
+  //   for(int i = 20 ;i<=24;i++){
+  //     rs2[i-20] = current.instruction[i];
+  //   }
+  //   int funct7[7];
+  //   for(int i = 25 ;i<=31;i++){
+  //     funct7[i-25] = current.instruction[i];
+  //   }
+  // }
+  // else if (current.opcode == 19 || current.opcode == 3 || current.opcode == 103 || current.opcode ==105 || current.opcode == 23){
+  //   //opcode I
+  //   int rd[5];
+  //   for(int i = 7 ;i<=11;i++){
+  //     rd[i-7] = current.instruction[i];
+  //   }
+  //   int funct3[3];
+  //   for(int i = 12 ;i<=14;i++){
+  //     funct3[i-12] = current.instruction[i];
+  //   }
+  //   int rs1[5];
+  //   for(int i = 15 ;i<=19;i++){
+  //     rs1[i-15] = current.instruction[i];
+  //   }
+  //   int imm[12];
+  //   for(int i = 20 ;i<=31;i++){
+  //     imm[i-20] = current.instruction[i];
+  //   }
+  // }
+  // else if (current.opcode == 35){
+  //   //opcode S
+  //   int rd[5];
+  //   for(int i = 7 ;i<=11;i++){
+  //     rd[i-7] = current.instruction[i];
+  //   }
+  //   int funct3[3];
+  //   for(int i = 12 ;i<=14;i++){
+  //     funct3[i-12] = current.instruction[i];
+  //   }
+  //   int rs1[5];
+  //   for(int i = 15 ;i<=19;i++){
+  //     rs1[i-15] = current.instruction[i];
+  //   }
+  //   int rs2[5];
+  //   for(int i = 20 ;i<=24;i++){
+  //     rs2[i-20] = current.instruction[i];
+  //   }
+  //   int imm[7];
+  //   for(int i = 25 ;i<=31;i++){
+  //     imm[i-25] = current.instruction[i];
+  //   }
+  // }
+  // else if(current.opcode == 99){
+  //   //opcode B
+  //   int rd[5];
+  //   for(int i = 7 ;i<=11;i++){
+  //     rd[i-7] = current.instruction[i];
+  //   }
+  //   int funct3[3];
+  //   for(int i = 12 ;i<=14;i++){
+  //     funct3[i-12] = current.instruction[i];
+  //   }
+  //   int rs1[5];
+  //   for(int i = 15 ;i<=19;i++){
+  //     rs1[i-15] = current.instruction[i];
+  //   }
+  //   int rs2[5];
+  //   for(int i = 20 ;i<=24;i++){
+  //     rs2[i-20] = current.instruction[i];
+  //   }
+  //   int imm[7];
+  //   for(int i = 25 ;i<=31;i++){
+  //     imm[i-25] = current.instruction[i];
+  //   }
+  // }
+  // else if (current.opcode == 55){
+  //   //upcode U
+  //   int rd[5];
+  //   for(int i = 7 ;i<=11;i++){
+  //     rd[i-7] = current.instruction[i];
+  //   }
+  //   int imm[20];
+  //   for(int i = 12 ;i<=31;i++){
+  //     imm[i-12] = current.instruction[i];
+  //   }
+  // }
+  // else if (current.opcode == 111){
+  //   //upcode J
+  //   int rd[5];
+  //   for(int i = 7 ;i<=11;i++){
+  //     rd[i-7] = current.instruction[i];
+  //   }
+  //   int imm[20];
+  //   for(int i = 12 ;i<=31;i++){
+  //     imm[i-12] = current.instruction[i];
+  //   }
+  // }
 
   
 
