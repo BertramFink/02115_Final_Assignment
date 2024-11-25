@@ -13,13 +13,6 @@ struct RegisterFile {
   int GP[32];
 };
 
-struct Instruction
-{
-  int opcode;
-  int opcodeInstruction[7];
-  int instruction[32];
-};
-
 struct Rtype
 {
   int opcode;
@@ -68,6 +61,12 @@ struct Jtype
   int imm;
 };
 
+struct Instruction
+{
+  int opcode;
+  int opcodeInstruction[7];
+  int instruction[32];
+};
 
 struct Memory *iMem;
 
@@ -179,16 +178,16 @@ struct Instruction parsing (struct Memory* mem, int pc){
   //opcode I
   }
   else if (current.opcode == 35){
-  //   //opcode S
+  //opcode S
   }
   else if(current.opcode == 99){
-  //   //opcode B
+  //opcode B
   }
   else if (current.opcode == 55){
-  //   //upcode U
+  //upcode U
   }
   else if (current.opcode == 111){
-  //   //upcode J
+  //upcode J
   }
 }
 
