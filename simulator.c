@@ -139,99 +139,124 @@ int main(int argc, char *argv[]) {
   printInstruction(current);
   current.opcode = OpcodeToDec(current.opcodeInstruction);
   printf("\n%d\n",current.opcode);
+  printf("%d %d %d %d %d %d\n",current.instruction[0],current.instruction[1],current.instruction[2],current.instruction[3],current.instruction[4],current.instruction[5]);
+
   
   if (current.opcode == 51){
     //Opcode R
     int rd[5];
     for(int i = 7 ;i<=11;i++){
-      rd[i] = current.instruction[i];
+      rd[i-7] = current.instruction[i];
     }
     int fucnt3[3];
     for(int i = 12 ;i<=14;i++){
-      rd[i] = current.instruction[i];
+      fucnt3[i-12] = current.instruction[i];
     }
     int rs1[5];
     for(int i = 15 ;i<=19;i++){
-      rd[i] = current.instruction[i];
+      rs1[i-15] = current.instruction[i];
     }
     int rs2[5];
     for(int i = 20 ;i<=24;i++){
-      rd[i] = current.instruction[i];
+      rs2[i-20] = current.instruction[i];
     }
     int funct7[7];
     for(int i = 25 ;i<=31;i++){
-      rd[i] = current.instruction[i];
+      funct7[i-25] = current.instruction[i];
     }
-    printf("rd:%d ass %d",rd[0],current.instruction[31]);
   }
   else if (current.opcode == 19 || current.opcode == 3 || current.opcode == 103 || current.opcode ==105 || current.opcode == 23){
     //opcode I
     int rd[5];
-    int fucnt3[3];
+    for(int i = 7 ;i<=11;i++){
+      rd[i-7] = current.instruction[i];
+    }
+    int funct3[3];
+    for(int i = 12 ;i<=14;i++){
+      funct3[i-12] = current.instruction[i];
+    }
     int rs1[5];
+    for(int i = 15 ;i<=19;i++){
+      rs1[i-15] = current.instruction[i];
+    }
     int imm[12];
+    for(int i = 20 ;i<=31;i++){
+      imm[i-20] = current.instruction[i];
+    }
   }
   else if (current.opcode == 35){
     //opcode S
     int rd[5];
-    int fucnt3[3];
+    for(int i = 7 ;i<=11;i++){
+      rd[i-7] = current.instruction[i];
+    }
+    int funct3[3];
+    for(int i = 12 ;i<=14;i++){
+      funct3[i-12] = current.instruction[i];
+    }
     int rs1[5];
+    for(int i = 15 ;i<=19;i++){
+      rs1[i-15] = current.instruction[i];
+    }
     int rs2[5];
+    for(int i = 20 ;i<=24;i++){
+      rs2[i-20] = current.instruction[i];
+    }
     int imm[7];
+    for(int i = 25 ;i<=31;i++){
+      imm[i-25] = current.instruction[i];
+    }
   }
   else if(current.opcode == 99){
     //opcode B
     int rd[5];
-    int fucnt3[3];
+    for(int i = 7 ;i<=11;i++){
+      rd[i-7] = current.instruction[i];
+    }
+    int funct3[3];
+    for(int i = 12 ;i<=14;i++){
+      funct3[i-12] = current.instruction[i];
+    }
     int rs1[5];
+    for(int i = 15 ;i<=19;i++){
+      rs1[i-15] = current.instruction[i];
+    }
     int rs2[5];
+    for(int i = 20 ;i<=24;i++){
+      rs2[i-20] = current.instruction[i];
+    }
     int imm[7];
+    for(int i = 25 ;i<=31;i++){
+      imm[i-25] = current.instruction[i];
+    }
   }
   else if (current.opcode == 55){
     //upcode U
     int rd[5];
+    for(int i = 7 ;i<=11;i++){
+      rd[i-7] = current.instruction[i];
+    }
     int imm[20];
+    for(int i = 12 ;i<=31;i++){
+      imm[i-12] = current.instruction[i];
+    }
   }
   else if (current.opcode == 111){
     //upcode J
     int rd[5];
+    for(int i = 7 ;i<=11;i++){
+      rd[i-7] = current.instruction[i];
+    }
     int imm[20];
+    for(int i = 12 ;i<=31;i++){
+      imm[i-12] = current.instruction[i];
+    }
   }
 
+  
 
 
-  // switch (current.opcode){
-  //   case 51:
-  //     printf("opcode - R: ");
-  //     break;
-  //   case 19 :
-  //     printf("opcode - I: ");
-  //     break;
-  //   case 3 : 
-  //     printf("opcode - I: ");
-  //     break;
-  //   case 103: 
-  //     printf("opcode - I: ");
-  //     break;
-  //   case 105 : 
-  //     printf("opcode - I: ");
-  //     break;
-  //   case 35:
-  //     printf("opcode - S: ");
-  //     break;
-  //   case 99:
-  //     printf("opcode - B: ");
-  //     break;
-  //   case 55:
-  //     printf("opcode - U: ");
-  //     break;
-  //   case 23: 
-  //     printf("opcode - I: ");
-  //     break;
-  //   case 111:
-  //     printf("opcode - J: ");
-  //     break;
-  // }
+
 
   return 0;
 }
