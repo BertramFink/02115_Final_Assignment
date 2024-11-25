@@ -80,13 +80,16 @@ void memWrite(struct Memory *memory, size_t index, int value) {
 }
 
 int regRead(size_t index) {
+  if (index == 0) {
+    return 0;
+  }
   if (index < 32) {
     return rf->GP[index];
   }
 }
 
 void regWrite(size_t index, int value) {
-  if (index < 32) {
+  if (index > 0 && index < 32) {
     rf->GP[index] = value;
   }
 }
@@ -117,15 +120,14 @@ void initIMem(char *fileName) {
 
 void printRegisterFile() {
   printf("\nRegister Content:\n PC=0x%08x\n", rf->PC);
-  for (int i = 0; i < 4; i ++) {
-    for (int j = 0; j < 16; j += 4) {
+  for (int j = 0; j < 32; j += 4) {
+    for (int i = 0; i < 4; i ++) { 
       int n = i + j;
       printf("%sx%d=0x%08x   ", n < 10 ? " " : "", n, regRead(n));
     }
     printf("\n");
   }
 }
-
 
 struct Instruction getInstruction(struct Memory* mem, int pc){
   struct Instruction current;
@@ -208,11 +210,17 @@ struct Jtype parseJtype(int instruction){
 }
 
 void executeMathReg(struct Rtype instruction) {
-  
+  switch (instruction.funct3) {
+    // add
+    case 0b000: regWrite(instruction.rd, regRead(instruction.rs1) + regRead(instruction.rs2)); break;
+  }
 }
 
 void executeMathImm(struct Itype instruction) {
-  
+  switch (instruction.funct3) {
+    // addi
+    case 0b000: regWrite(instruction.rd, regRead(instruction.rs1) + instruction.imm); break;
+  }
 }
 
 void executeLoad(struct Itype instruction) {
@@ -224,10 +232,10 @@ void executeJALR(struct Itype instruction) {
 }
 
 void executeEcall(struct Itype instruction) {
-  int a7 = regRead(7);
+  int a7 = regRead(17);
   switch (a7) {
     case 10: exit(0); 
-    default: printf("Unkown Ecall %d\n", a7); exit(1);
+    default: printf("Unkown Ecall: a7=%d\n", a7); exit(1);
   }
 }
 
