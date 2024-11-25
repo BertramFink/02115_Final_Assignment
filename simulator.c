@@ -206,7 +206,54 @@ void execute(int instruction){
     case 55: break;
     case 111: break;
   }
+}
 
+struct Rtype Rtype_parsing(int instruction){
+  struct Rtype parssed_instruction;
+  parssed_instruction.rd = bits(instruction,11,7);
+  parssed_instruction.fucnt3 = bits(instruction,14,12);
+  parssed_instruction.rs1 = bits(instruction,19,15);
+  parssed_instruction.rs2 = bits(instruction,24,20);
+  parssed_instruction.funct7 = bits(instruction,31,25);
+  return parssed_instruction;
+}
+struct Itype Rtype_parsing(int instruction){
+  struct Itype parssed_instruction;
+  parssed_instruction.rd = bits(instruction,11,7);
+  parssed_instruction.fucnt3 = bits(instruction,14,12);
+  parssed_instruction.rs1 = bits(instruction,19,15);
+  parssed_instruction.imm = bits(instruction,31,20);
+  return parssed_instruction;
+}
+struct Stype Rtype_parsing(int instruction){
+  struct Stype parssed_instruction;
+  parssed_instruction.rd = bits(instruction,11,7);
+  parssed_instruction.fucnt3 = bits(instruction,14,12);
+  parssed_instruction.rs1 = bits(instruction,19,15);
+  parssed_instruction.rs2 = bits(instruction,24,20);
+  parssed_instruction.imm = bits(instruction,31,25);
+  return parssed_instruction;
+}
+struct Btype Rtype_parsing(int instruction){
+  struct Btype parssed_instruction;
+  parssed_instruction.rd = bits(instruction,11,7);
+  parssed_instruction.fucnt3 = bits(instruction,14,12);
+  parssed_instruction.rs1 = bits(instruction,19,15);
+  parssed_instruction.rs2 = bits(instruction,24,20);
+  parssed_instruction.imm = bits(instruction,31,25);
+  return parssed_instruction;
+}
+struct Utype Rtype_parsing(int instruction){
+  struct Utype parssed_instruction;
+  parssed_instruction.rd = bits(instruction,11,7);
+  parssed_instruction.imm = bits(instruction,31,12);
+  return parssed_instruction;
+}
+struct Jtype Rtype_parsing(int instruction){
+  struct Jtype parssed_instruction;
+  parssed_instruction.rd = bits(instruction,11,7);
+  parssed_instruction.imm = bits(instruction,31,12);
+  return parssed_instruction;
 }
 
 
