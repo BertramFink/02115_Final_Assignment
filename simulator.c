@@ -305,6 +305,8 @@ int main(int argc, char *argv[]) {
 
     rf->PC += 4;
   }
+
+  printf("Reached end of file\n");
   
   return 0;
 }
