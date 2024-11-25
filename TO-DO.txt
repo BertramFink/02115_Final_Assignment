@@ -4,6 +4,7 @@
 - switch statement for instructions                         [ansvar til 25/11/2024: KARL]
 - main loop                                                 
 
+
 register file:
   int rRead(0-31);
   void rWrite(0-31, int);
