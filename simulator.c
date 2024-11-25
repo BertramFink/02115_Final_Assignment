@@ -224,7 +224,11 @@ void executeJALR(struct Itype instruction) {
 }
 
 void executeEcall(struct Itype instruction) {
-
+  int a7 = regRead(7);
+  switch (a7) {
+    case 10: exit(0); 
+    default: printf("Unkown Ecall %d\n", a7); exit(1);
+  }
 }
 
 void executeStore(struct Stype instruction) {
@@ -280,8 +284,10 @@ int main(int argc, char *argv[]) {
   }
 
   initIMem(argv[1]);
-  rf = (struct RegisterFile *) malloc(sizeof(struct RegisterFile));
+  rf = (struct RegisterFile *) calloc(sizeof(struct RegisterFile), 1);
   rf->PC = 0;
+
+  atexit(printRegisterFile);
 
   while (rf->PC < iMem->length) {
     int instruction = memRead(iMem, rf->PC);
@@ -291,7 +297,6 @@ int main(int argc, char *argv[]) {
 
     rf->PC += 4;
   }
-
-  printRegisterFile();
+  
   return 0;
 }
