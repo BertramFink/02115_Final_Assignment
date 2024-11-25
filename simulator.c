@@ -16,7 +16,7 @@ struct RegisterFile {
 struct Rtype
 {
   int rd;
-  int fucnt3;
+  int funct3;
   int rs1;
   int rs2;
   int funct7;
@@ -24,14 +24,14 @@ struct Rtype
 struct Itype
 {
   int rd;
-  int fucnt3;
+  int funct3;
   int rs1;
   int imm;
 };
 struct Stype
 {
   int rd;
-  int fucnt3;
+  int funct3;
   int rs1;
   int rs2;
   int imm;
@@ -39,7 +39,7 @@ struct Stype
 struct Btype
 {
   int rd;
-  int fucnt3;
+  int funct3;
   int rs1;
   int rs2;
   int imm;
@@ -159,97 +159,119 @@ int binToDec(int bin[],int size){
   return sum;
 }
 
+struct Rtype parseRtype(int instruction){
+  struct Rtype parsed;
+  parsed.rd = bits(instruction,11,7);
+  parsed.funct3 = bits(instruction,14,12);
+  parsed.rs1 = bits(instruction,19,15);
+  parsed.rs2 = bits(instruction,24,20);
+  parsed.funct7 = bits(instruction,31,25);
+  return parsed;
+}
+struct Itype parseItype(int instruction){
+  struct Itype parsed;
+  parsed.rd = bits(instruction,11,7);
+  parsed.funct3 = bits(instruction,14,12);
+  parsed.rs1 = bits(instruction,19,15);
+  parsed.imm = bits(instruction,31,20);
+  return parsed;
+}
+struct Stype parseStype(int instruction){
+  struct Stype parsed;
+  parsed.rd = bits(instruction,11,7);
+  parsed.funct3 = bits(instruction,14,12);
+  parsed.rs1 = bits(instruction,19,15);
+  parsed.rs2 = bits(instruction,24,20);
+  parsed.imm = bits(instruction,31,25);
+  return parsed;
+}
+struct Btype parseBtype(int instruction){
+  struct Btype parsed;
+  parsed.rd = bits(instruction,11,7);
+  parsed.funct3 = bits(instruction,14,12);
+  parsed.rs1 = bits(instruction,19,15);
+  parsed.rs2 = bits(instruction,24,20);
+  parsed.imm = bits(instruction,31,25);
+  return parsed;
+}
+struct Utype parseUtype(int instruction){
+  struct Utype parsed;
+  parsed.rd = bits(instruction,11,7);
+  parsed.imm = bits(instruction,31,12);
+  return parsed;
+}
+struct Jtype parseJtype(int instruction){
+  struct Jtype parsed;
+  parsed.rd = bits(instruction,11,7);
+  parsed.imm = bits(instruction,31,12);
+  return parsed;
+}
+
 void executeMathReg(struct Rtype instruction) {
   
 }
 
-void executeMathImm(struct Rtype instruction) {
+void executeMathImm(struct Itype instruction) {
   
+}
+
+void executeLoad(struct Itype instruction) {
+
+}
+
+void executeJALR(struct Itype instruction) {
+
+}
+
+void executeEcall(struct Itype instruction) {
+
+}
+
+void executeStore(struct Stype instruction) {
+
+}
+
+void executeBranch(struct Btype instruction) {
+
+}
+
+void executeAUIPC(struct Utype instruction) {
+
+}
+
+void executeLUI(struct Utype instruction) {
+
+}
+
+void executeJAL(struct Jtype instruction) {
+
 }
 
 void execute(int instruction){
   int opcode = bits(instruction,6,0);
-  // if (opcode == 51){
-  // //Opcode R
-  // }
-  // else if (opcode == 19 || opcode == 3 || opcode == 103 || opcode ==105 || opcode == 23){
-  // //opcode I
-  // }
-  // else if (opcode == 35){
-  // //opcode S
-  // }
-  // else if(opcode == 99){
-  // //opcode B
-  // }
-  // else if (opcode == 55){
-  // //upcode U
-  // }
-  // else if (opcode == 111){
-  // //upcode J
-  // }
-
   switch (opcode) {
-    case 0b0110011: executeMathReg(parseRtype(instruction)); break;
-    case 0b0010011: executeMathImm(parseItype(instruction)); break;
-    case 3: break;
-    case 103: break;
-    case 105: break;
-    case 23: break;
-    case 35: break;
-    case 99: break;
-    case 55: break;
-    case 111: break;
+    // R Type:
+    case 0b0110011: return executeMathReg(parseRtype(instruction));
+    // I Type:
+    case 0b0000011: return executeLoad(parseItype(instruction));
+    case 0b0010011: return executeMathImm(parseItype(instruction));
+    case 0b1100111: return executeJALR(parseItype(instruction));
+    case 0b1110011: return executeEcall(parseItype(instruction));
+    // case 105: break; Eksisterer ikke
+    // case 23: break; Eksisterer ikke
+    // S Type:
+    case 0b0100011: return executeStore(parseStype(instruction));
+    // B Type:
+    case 0b1100011: return executeBranch(parseBtype(instruction));
+    // U Type:
+    case 0b0010111: return executeAUIPC(parseUtype(instruction));
+    case 0b0110111: return executeLUI(parseUtype(instruction));
+    // J Type:
+    case 0b1101111: return executeJAL(parseJtype(instruction));
+    
+    default: printf("Illegal opcode: 0x%02x of instruction: 0x%08x\n", opcode, instruction); exit(1);
   }
 }
-
-struct Rtype Rtype_parsing(int instruction){
-  struct Rtype parssed_instruction;
-  parssed_instruction.rd = bits(instruction,11,7);
-  parssed_instruction.fucnt3 = bits(instruction,14,12);
-  parssed_instruction.rs1 = bits(instruction,19,15);
-  parssed_instruction.rs2 = bits(instruction,24,20);
-  parssed_instruction.funct7 = bits(instruction,31,25);
-  return parssed_instruction;
-}
-struct Itype Rtype_parsing(int instruction){
-  struct Itype parssed_instruction;
-  parssed_instruction.rd = bits(instruction,11,7);
-  parssed_instruction.fucnt3 = bits(instruction,14,12);
-  parssed_instruction.rs1 = bits(instruction,19,15);
-  parssed_instruction.imm = bits(instruction,31,20);
-  return parssed_instruction;
-}
-struct Stype Rtype_parsing(int instruction){
-  struct Stype parssed_instruction;
-  parssed_instruction.rd = bits(instruction,11,7);
-  parssed_instruction.fucnt3 = bits(instruction,14,12);
-  parssed_instruction.rs1 = bits(instruction,19,15);
-  parssed_instruction.rs2 = bits(instruction,24,20);
-  parssed_instruction.imm = bits(instruction,31,25);
-  return parssed_instruction;
-}
-struct Btype Rtype_parsing(int instruction){
-  struct Btype parssed_instruction;
-  parssed_instruction.rd = bits(instruction,11,7);
-  parssed_instruction.fucnt3 = bits(instruction,14,12);
-  parssed_instruction.rs1 = bits(instruction,19,15);
-  parssed_instruction.rs2 = bits(instruction,24,20);
-  parssed_instruction.imm = bits(instruction,31,25);
-  return parssed_instruction;
-}
-struct Utype Rtype_parsing(int instruction){
-  struct Utype parssed_instruction;
-  parssed_instruction.rd = bits(instruction,11,7);
-  parssed_instruction.imm = bits(instruction,31,12);
-  return parssed_instruction;
-}
-struct Jtype Rtype_parsing(int instruction){
-  struct Jtype parssed_instruction;
-  parssed_instruction.rd = bits(instruction,11,7);
-  parssed_instruction.imm = bits(instruction,31,12);
-  return parssed_instruction;
-}
-
 
 int main(int argc, char *argv[]) {
   if (argc < 2) {
@@ -265,133 +287,11 @@ int main(int argc, char *argv[]) {
     int instruction = memRead(iMem, rf->PC);
     printf("%4d: 0x%08x\n", rf->PC, instruction);
 
-    parsing(instruction);
+    execute(instruction);
 
     rf->PC += 4;
   }
 
   printRegisterFile();
-  printf("%08x\n",memRead(iMem,0));
-
-  // rf->PC = 0;
-  // parsing(iMem,rf->PC);
-  
-  // if (current.opcode == 51){
-  //   //Opcode R
-  //   int rd[5];
-  //   for(int i = 7 ;i<=11;i++){
-  //     rd[i-7] = current.instruction[i];
-  //   }
-  //   int fucnt3[3];
-  //   for(int i = 12 ;i<=14;i++){
-  //     fucnt3[i-12] = current.instruction[i];
-  //   }
-  //   int rs1[5];
-  //   for(int i = 15 ;i<=19;i++){
-  //     rs1[i-15] = current.instruction[i];
-  //   }
-  //   int rs2[5];
-  //   for(int i = 20 ;i<=24;i++){
-  //     rs2[i-20] = current.instruction[i];
-  //   }
-  //   int funct7[7];
-  //   for(int i = 25 ;i<=31;i++){
-  //     funct7[i-25] = current.instruction[i];
-  //   }
-  // }
-  // else if (current.opcode == 19 || current.opcode == 3 || current.opcode == 103 || current.opcode ==105 || current.opcode == 23){
-  //   //opcode I
-  //   int rd[5];
-  //   for(int i = 7 ;i<=11;i++){
-  //     rd[i-7] = current.instruction[i];
-  //   }
-  //   int funct3[3];
-  //   for(int i = 12 ;i<=14;i++){
-  //     funct3[i-12] = current.instruction[i];
-  //   }
-  //   int rs1[5];
-  //   for(int i = 15 ;i<=19;i++){
-  //     rs1[i-15] = current.instruction[i];
-  //   }
-  //   int imm[12];
-  //   for(int i = 20 ;i<=31;i++){
-  //     imm[i-20] = current.instruction[i];
-  //   }
-  // }
-  // else if (current.opcode == 35){
-  //   //opcode S
-  //   int rd[5];
-  //   for(int i = 7 ;i<=11;i++){
-  //     rd[i-7] = current.instruction[i];
-  //   }
-  //   int funct3[3];
-  //   for(int i = 12 ;i<=14;i++){
-  //     funct3[i-12] = current.instruction[i];
-  //   }
-  //   int rs1[5];
-  //   for(int i = 15 ;i<=19;i++){
-  //     rs1[i-15] = current.instruction[i];
-  //   }
-  //   int rs2[5];
-  //   for(int i = 20 ;i<=24;i++){
-  //     rs2[i-20] = current.instruction[i];
-  //   }
-  //   int imm[7];
-  //   for(int i = 25 ;i<=31;i++){
-  //     imm[i-25] = current.instruction[i];
-  //   }
-  // }
-  // else if(current.opcode == 99){
-  //   //opcode B
-  //   int rd[5];
-  //   for(int i = 7 ;i<=11;i++){
-  //     rd[i-7] = current.instruction[i];
-  //   }
-  //   int funct3[3];
-  //   for(int i = 12 ;i<=14;i++){
-  //     funct3[i-12] = current.instruction[i];
-  //   }
-  //   int rs1[5];
-  //   for(int i = 15 ;i<=19;i++){
-  //     rs1[i-15] = current.instruction[i];
-  //   }
-  //   int rs2[5];
-  //   for(int i = 20 ;i<=24;i++){
-  //     rs2[i-20] = current.instruction[i];
-  //   }
-  //   int imm[7];
-  //   for(int i = 25 ;i<=31;i++){
-  //     imm[i-25] = current.instruction[i];
-  //   }
-  // }
-  // else if (current.opcode == 55){
-  //   //upcode U
-  //   int rd[5];
-  //   for(int i = 7 ;i<=11;i++){
-  //     rd[i-7] = current.instruction[i];
-  //   }
-  //   int imm[20];
-  //   for(int i = 12 ;i<=31;i++){
-  //     imm[i-12] = current.instruction[i];
-  //   }
-  // }
-  // else if (current.opcode == 111){
-  //   //upcode J
-  //   int rd[5];
-  //   for(int i = 7 ;i<=11;i++){
-  //     rd[i-7] = current.instruction[i];
-  //   }
-  //   int imm[20];
-  //   for(int i = 12 ;i<=31;i++){
-  //     imm[i-12] = current.instruction[i];
-  //   }
-  // }
-
-  
-
-  
-
-
-
   return 0;
 }
