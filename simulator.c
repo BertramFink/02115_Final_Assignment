@@ -104,13 +104,10 @@ void printInstruction(struct Instruction current){
   printf("\n");
 }
 
-int OpcodeToDec(int bin[]){
+int binToDec(int bin[],int size){
   int sum = 0;
-  int size = 6;
-  int j = 0;
-  for(int i = size; i>=0;i--){
-    sum += bin[i]*pow(2,size-j);
-    j++;
+  for(int i = 0; i<size;i++){
+    sum += bin[i]*pow(2,i);
   }
   return sum;
 }
@@ -137,10 +134,10 @@ int main(int argc, char *argv[]) {
   struct Instruction current;
   current =  getInstruction(iMem,2);
   printInstruction(current);
-  current.opcode = OpcodeToDec(current.opcodeInstruction);
-  printf("\n%d\n",current.opcode);
-  printf("%d %d %d %d %d %d\n",current.instruction[0],current.instruction[1],current.instruction[2],current.instruction[3],current.instruction[4],current.instruction[5]);
+  current.opcode = binToDec(current.opcodeInstruction,7);
 
+
+  printf("\n%d\n",current.opcode);
   
   if (current.opcode == 51){
     //Opcode R
@@ -255,6 +252,7 @@ int main(int argc, char *argv[]) {
 
   
 
+  
 
 
 
