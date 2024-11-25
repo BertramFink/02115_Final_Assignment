@@ -100,6 +100,10 @@ int bits(int source, int high, int low) {
   return (source >> low) & mask;
 }
 
+int bit(int source, int index) {
+  return (source >> index) & 1;
+}
+
 void initIMem(char *fileName) {
   FILE *file = fopen(fileName, "rb");
   if (file == NULL) {
@@ -175,7 +179,7 @@ struct Itype parseItype(int instruction){
   parsed.rd = bits(instruction,11,7);
   parsed.funct3 = bits(instruction,14,12);
   parsed.rs1 = bits(instruction,19,15);
-  parsed.imm = bits(instruction,31,20);
+  parsed.imm = bits(instruction,30,20) - (bit(instruction,31) << 11);
   return parsed;
 }
 struct Stype parseStype(int instruction){
@@ -209,18 +213,41 @@ struct Jtype parseJtype(int instruction){
   return parsed;
 }
 
-void executeMathReg(struct Rtype instruction) {
-  switch (instruction.funct3) {
-    // add
-    case 0b000: regWrite(instruction.rd, regRead(instruction.rs1) + regRead(instruction.rs2)); break;
+int ALU(int funct3, int funct7, int operand1, int operand2) {
+  switch (funct3) {
+    // add / sub
+    case 0b000: return bit(funct7, 5) ? operand1 - operand2 : operand1 + operand2;
+    // sll (shift left)
+    case 0b001: return operand1 << operand2;
+    // slt (set less than)
+    case 0b010: return (operand1 < operand2) ? 1 : 0;
+    // sltu (set less than unsigned)
+    case 0b011: return ((unsigned int) operand1 < (unsigned int) operand2) ? 1 : 0;
+    // xor
+    case 0b100: return operand1 ^ operand2;
+    // srl / sra
+    case 0b101: return bit(funct7, 5) ? operand1 >> operand2 : (unsigned int) operand1 >> (unsigned int) operand2;
+    // or
+    case 0b110: return operand1 | operand2;
+    // and
+    case 0b111: return operand1 & operand2;
   }
 }
 
+void executeMathReg(struct Rtype instruction) {
+  int operand1 = regRead(instruction.rs1);
+  int operand2 = regRead(instruction.rs2);
+  int result = ALU(instruction.funct3, instruction.funct7, operand1, operand2);
+  regWrite(instruction.rd, result);
+}
+
 void executeMathImm(struct Itype instruction) {
-  switch (instruction.funct3) {
-    // addi
-    case 0b000: regWrite(instruction.rd, regRead(instruction.rs1) + instruction.imm); break;
-  }
+  int operand1 = regRead(instruction.rs1);
+  int operand2 = instruction.imm;
+  // In case of srli / srai instruction:
+  int funct7 = instruction.funct3 == 0b101 ? bits(instruction.imm, 11, 5) : 0;
+  int result = ALU(instruction.funct3, funct7, operand1, operand2);
+  regWrite(instruction.rd, result);
 }
 
 void executeLoad(struct Itype instruction) {
