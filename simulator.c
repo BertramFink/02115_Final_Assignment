@@ -100,7 +100,7 @@ void regWrite(size_t index, int value) {
 int bits(int source, int high, int low) {
   int width = high - low + 1;
   int mask = (1 << width) - 1;
-  return (source >> low) & mask; 
+  return (source >> low) & mask;
 }
 
 void initIMem(char *fileName) {
@@ -165,28 +165,24 @@ int binToDec(int bin[],int size){
   return sum;
 }
 
-struct Instruction parsing (struct Memory* mem, int pc){
-  struct Instruction current;
-  current = getInstruction(mem,pc);
-  printInstruction(current);
-  current.opcode = binToDec(current.opcodeInstruction,7);
-  printf("\n%d\n",current.opcode);
-  if (current.opcode == 51){
+struct Instruction parsing(int instruction){
+  int opcode = bits(instruction,6,0);
+  if (opcode == 51){
   //Opcode R
   }
-  else if (current.opcode == 19 || current.opcode == 3 || current.opcode == 103 || current.opcode ==105 || current.opcode == 23){
+  else if (opcode == 19 || opcode == 3 || opcode == 103 || opcode ==105 || opcode == 23){
   //opcode I
   }
-  else if (current.opcode == 35){
+  else if (opcode == 35){
   //opcode S
   }
-  else if(current.opcode == 99){
+  else if(opcode == 99){
   //opcode B
   }
-  else if (current.opcode == 55){
+  else if (opcode == 55){
   //upcode U
   }
-  else if (current.opcode == 111){
+  else if (opcode == 111){
   //upcode J
   }
 }
@@ -205,14 +201,17 @@ int main(int argc, char *argv[]) {
   while (rf->PC < iMem->length) {
     int instruction = memRead(iMem, rf->PC);
     printf("%4d: 0x%08x\n", rf->PC, instruction);
+
+    parsing(instruction);
+
     rf->PC += 4;
   }
 
   printRegisterFile();
   printf("%08x\n",memRead(iMem,0));
 
-  rf->PC = 0;
-  parsing(iMem,rf->PC);
+  // rf->PC = 0;
+  // parsing(iMem,rf->PC);
   
   // if (current.opcode == 51){
   //   //Opcode R
