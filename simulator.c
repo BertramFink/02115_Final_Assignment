@@ -66,8 +66,10 @@ struct Memory *iMem;
 
 struct RegisterFile *rf;
 
-#define REG_FILE_LENGTH (32*4)
-char resultsFile[REG_FILE_LENGTH]; 
+// #define REG_FILE_LENGTH (32*4)
+// char resultsFile[REG_FILE_LENGTH]; 
+
+struct RegisterFile *resultsFile;
 
 
 int memRead(struct Memory *memory, size_t index) {
@@ -126,21 +128,23 @@ void initIMem(char *fileName) {
 }
 
 void prepareResults(char *fileName) {
+  resultsFile = NULL;
   char *point = strrchr(fileName, '.');
   if (point == NULL) {
-    printf("Missing file extension\n");
-    exit(1);
+    printf("[WARNING] No results file found\n\n");
+    return;
   }
   *point = '\0';
   char resultFileName[100];
   sprintf(resultFileName, "%s%s", fileName, ".res");
   FILE *file = fopen(resultFileName, "rb");
   if (file == NULL) {
-    perror("Error opening results file");
-    exit(1);
+    printf("[WARNING] No results file found\n\n");
+    return;
   }
-  int i = fread(resultsFile, 1, REG_FILE_LENGTH, file);
-  if (i != REG_FILE_LENGTH) {
+  resultsFile = (struct RegisterFile *) malloc(sizeof(struct RegisterFile));
+  int i = fread(resultsFile->GP, 1, sizeof(resultsFile->GP), file);
+  if (i != sizeof(resultsFile->GP)) {
     perror("Error reading results file");
     exit(1);
   }
@@ -158,7 +162,10 @@ void printRegisterFile() {
 }
 
 void successfullExit() {
-  if (memcmp(rf->GP, resultsFile, REG_FILE_LENGTH) == 0) {
+  if (resultsFile == NULL) {
+    exit(0);
+  }
+  if (memcmp(rf->GP, resultsFile->GP, sizeof(resultsFile->GP)) == 0) {
     printf("\nRegisterfile is identical to expected result\n");
     exit(0);
   } else {
@@ -166,7 +173,7 @@ void successfullExit() {
     for (int j = 0; j < 32; j += 4) {
       for (int i = 0; i < 4; i ++) { 
         int n = i + j;
-        printf("%sx%d=0x%08x   ", n < 10 ? " " : "", n, * (int *) &resultsFile[n*4]);
+        printf("%sx%d=0x%08x   ", n < 10 ? " " : "", n, resultsFile->GP[n]);
       }
       printf("\n");
     }

@@ -6,18 +6,19 @@
 #include <string.h>
 
 int executeBin(char *binFile) {
-  printf("\nRunning simulator with binary file: %s\n", binFile);
   pid_t pid = fork();
   if (pid == 0) {
-    char *simulator = "simulator";
-    char *arguments[] = {simulator, binFile, NULL};
-    execv(simulator, arguments);
-    printf("Failed to execute simulator");
+    printf("Running binary file: %s - ", binFile);
+    // Throw away standard output and errors of simulator
+    freopen("/dev/null", "w", stdout);
+    freopen("/dev/null", "w", stderr);
+    execl("simulator", "simulator", binFile, NULL);
+    printf("Failed to execute simulator\n");
     exit(1);
   } else {
     int result;
     waitpid(pid, &result, 0);
-    printf("program executed with exit code: %d\n", result);
+    printf("%s\n", result ? "FAILED" : "SUCCESS");
     return !!result;
   }
 }
@@ -32,16 +33,21 @@ void executeAllBinInDir(char *dirName, int *attempts, int *successes) {
   }
   struct dirent *dir;
   while ((dir = readdir(d)) != NULL){
-    if (dir->d_type == DT_REG) {
+    if (dir->d_type == DT_DIR) {
+      if (dir->d_name[0] != '.') {
+        char newDirName[1000];
+        sprintf(newDirName, "%s/%s", dirName, dir->d_name);
+        executeAllBinInDir(newDirName, attempts, successes);
+      }
+    }
+    else if (dir->d_type == DT_REG) {
       char *extension = strrchr(dir->d_name, '.');
       if (strcmp(extension,".bin") == 0) {
         char fileName[1000];
         sprintf(fileName, "%s/%s", dirName, dir->d_name);
         int result = executeBin(fileName);
         (*attempts) ++;
-        if (result == 0) {
-          (*successes) ++;
-        }
+        (*successes) += !result;
       }
     }
   }
@@ -51,12 +57,7 @@ void executeAllBinInDir(char *dirName, int *attempts, int *successes) {
 int main() {
   int attempts = 0;
   int successes = 0;
-
-  executeAllBinInDir("./tests/task1", &attempts, &successes);
-  executeAllBinInDir("./tests/task2", &attempts, &successes);
-  executeAllBinInDir("./tests/task3", &attempts, &successes);
-  executeAllBinInDir("./tests/task4", &attempts, &successes);
-
+  executeAllBinInDir("./tests", &attempts, &successes);
   printf("\nSummary:\nSucesses: %d\nTotal: %d\n", successes, attempts);
-  //executeBin("tests/task1/addlarge.bin");
+  return 0;
 }
