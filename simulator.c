@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
-#include <math.h>
+#include <string.h>
 
 struct Memory {
   size_t length;
@@ -66,6 +66,9 @@ struct Memory *iMem;
 
 struct RegisterFile *rf;
 
+#define REG_FILE_LENGTH (32*4)
+char resultsFile[REG_FILE_LENGTH]; 
+
 
 int memRead(struct Memory *memory, size_t index) {
   if (index < memory->length) {
@@ -122,6 +125,27 @@ void initIMem(char *fileName) {
   }
 }
 
+void prepareResults(char *fileName) {
+  char *point = strrchr(fileName, '.');
+  if (point == NULL) {
+    printf("Missing file extension\n");
+    exit(1);
+  }
+  *point = '\0';
+  char resultFileName[100];
+  sprintf(resultFileName, "%s%s", fileName, ".res");
+  FILE *file = fopen(resultFileName, "rb");
+  if (file == NULL) {
+    perror("Error opening results file");
+    exit(1);
+  }
+  int i = fread(resultsFile, 1, REG_FILE_LENGTH, file);
+  if (i != REG_FILE_LENGTH) {
+    perror("Error reading results file");
+    exit(1);
+  }
+}
+
 void printRegisterFile() {
   printf("\nRegister Content:\n PC=0x%08x\n", rf->PC);
   for (int j = 0; j < 32; j += 4) {
@@ -130,6 +154,23 @@ void printRegisterFile() {
       printf("%sx%d=0x%08x   ", n < 10 ? " " : "", n, regRead(n));
     }
     printf("\n");
+  }
+}
+
+void successfullExit() {
+  if (memcmp(rf->GP, resultsFile, REG_FILE_LENGTH) == 0) {
+    printf("\nRegisterfile is identical to expected result\n");
+    exit(0);
+  } else {
+    printf("\nRegisterfile is DIFFERENT from expected result\nExpected:\n");
+    for (int j = 0; j < 32; j += 4) {
+      for (int i = 0; i < 4; i ++) { 
+        int n = i + j;
+        printf("%sx%d=0x%08x   ", n < 10 ? " " : "", n, * (int *) &resultsFile[n*4]);
+      }
+      printf("\n");
+    }
+    exit(1);
   }
 }
 
@@ -157,13 +198,13 @@ void printInstruction(struct Instruction current){
   printf("\n");
 }
 
-int binToDec(int bin[],int size){
-  int sum = 0;
-  for(int i = 0; i<size;i++){
-    sum += bin[i]*pow(2,i);
-  }
-  return sum;
-}
+// int binToDec(int bin[],int size){
+//   int sum = 0;
+//   for(int i = 0; i<size;i++){
+//     sum += bin[i]*pow(2,i);
+//   }
+//   return sum;
+// }
 
 struct Rtype parseRtype(int instruction){
   struct Rtype parsed;
@@ -261,7 +302,7 @@ void executeJALR(struct Itype instruction) {
 void executeEcall(struct Itype instruction) {
   int a7 = regRead(17);
   switch (a7) {
-    case 10: exit(0); 
+    case 10: successfullExit(); 
     default: printf("Unkown Ecall: a7=%d\n", a7); exit(1);
   }
 }
@@ -319,6 +360,7 @@ int main(int argc, char *argv[]) {
   }
 
   initIMem(argv[1]);
+  prepareResults(argv[1]);
   rf = (struct RegisterFile *) calloc(sizeof(struct RegisterFile), 1);
   rf->PC = 0;
 
@@ -334,6 +376,7 @@ int main(int argc, char *argv[]) {
   }
 
   printf("Reached end of file\n");
+  successfullExit();
   
   return 0;
 }
