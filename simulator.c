@@ -335,22 +335,22 @@ void executeBranch(struct Btype instruction) {
   int imm = instruction.imm;
   switch (instruction.funct3) {
     case 0b000: // BEQ
-      if (snirk == snask) rf->PC += imm;
+      if (snirk == snask) registerFile.PC += imm;
       break;
     case 0b001: // BNE
-      if (snirk != snask) rf->PC += imm;
+      if (snirk != snask) registerFile.PC += imm;
       break;
     case 0b100: // BLT
-      if (snirk < snask) rf->PC += imm;
+      if (snirk < snask) registerFile.PC += imm;
       break;
     case 0b101: // BGE
-      if (snirk >= snask) rf->PC += imm;
+      if (snirk >= snask) registerFile.PC += imm;
       break;
     case 0b110: // BLTU
-      if ((unsigned int)snirk < (unsigned int)snask) rf->PC += imm;
+      if ((unsigned int)snirk < (unsigned int)snask) registerFile.PC += imm;
       break;
     case 0b111: // BGEU
-      if ((unsigned int)snirk >= (unsigned int)snask) rf->PC += imm;
+      if ((unsigned int)snirk >= (unsigned int)snask) registerFile.PC += imm;
       break;
     default:
       printf("Unknown branch funct3: 0x%02x\n", instruction.funct3);
@@ -408,6 +408,7 @@ int main(int argc, char *argv[]) {
 
   atexit(printRegisterFile);
 
+  int i = 0;
   while (1) {
     int instruction = memReadWord(registerFile.PC);
     printf("%4d: 0x%08x\n", registerFile.PC, instruction);
@@ -415,6 +416,11 @@ int main(int argc, char *argv[]) {
     execute(instruction);
 
     registerFile.PC += 4;
+
+    if (++i > 10000) {
+      printf("Maximum clock cycles reached!\n");
+      exit(1);
+    }
   }
 
   printf("Reached end of file\n");
