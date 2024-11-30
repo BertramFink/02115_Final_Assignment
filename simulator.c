@@ -242,7 +242,7 @@ struct Btype parseBtype(int instruction){
   parsed.funct3 = bits(instruction,14,12);
   parsed.rs1 = bits(instruction,19,15);
   parsed.rs2 = bits(instruction,24,20);
-  parsed.imm = bits(instruction,31,25);
+  parsed.imm = -(bit(instruction, 31) << 12) | (bit(instruction, 7) << 11) | (bits(instruction, 30, 25) << 5) | (bits(instruction, 11, 8) << 1);
   return parsed;
 }
 struct Utype parseUtype(int instruction){
@@ -341,7 +341,32 @@ void executeStore(struct Stype instruction) {
 }
 
 void executeBranch(struct Btype instruction) {
-
+  int snirk = regRead(instruction.rs1);
+  int snask = regRead(instruction.rs2);
+  int imm = instruction.imm;
+  switch (instruction.funct3) {
+    case 0b000: // BEQ
+      if (snirk == snask) rf->PC += imm;
+      break;
+    case 0b001: // BNE
+      if (snirk != snask) rf->PC += imm;
+      break;
+    case 0b100: // BLT
+      if (snirk < snask) rf->PC += imm;
+      break;
+    case 0b101: // BGE
+      if (snirk >= snask) rf->PC += imm;
+      break;
+    case 0b110: // BLTU
+      if ((unsigned int)snirk < (unsigned int)snask) rf->PC += imm;
+      break;
+    case 0b111: // BGEU
+      if ((unsigned int)snirk >= (unsigned int)snask) rf->PC += imm;
+      break;
+    default:
+      printf("Unknown branch funct3: 0x%02x\n", instruction.funct3);
+      exit(1);
+  }
 }
 
 void executeAUIPC(struct Utype instruction) {
