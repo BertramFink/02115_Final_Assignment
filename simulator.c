@@ -66,7 +66,7 @@ struct Jtype
   int imm;
 };
 
-uint32_t memReadWord(size_t address) {
+uint32_t memReadWord(uint32_t address) {
   int addr_hi = address >> 16;
   int addr_lo = address & 0xffff;
   struct Block *block = memory.blocks[addr_hi];
@@ -76,7 +76,7 @@ uint32_t memReadWord(size_t address) {
   return * (uint32_t *) &block->buffer[addr_lo];
 }
 
-uint8_t *getBufferAddress(size_t address) {
+uint8_t *getBufferAddress(uint32_t address) {
   int addr_hi = address >> 16;
   int addr_lo = address & 0xffff;
   struct Block *block = memory.blocks[addr_hi];
@@ -87,19 +87,19 @@ uint8_t *getBufferAddress(size_t address) {
   return &block->buffer[addr_lo];
 }
 
-void memWriteWord(size_t address, uint32_t value) {
+void memWriteWord(uint32_t address, uint32_t value) {
   * (uint32_t *) getBufferAddress(address) = value;
 }
 
-void memWriteHalfWord(size_t address, uint16_t value) {
+void memWriteHalfWord(uint32_t address, uint16_t value) {
   * (uint16_t *) getBufferAddress(address) = value;
 }
 
-void memWriteByte(size_t address, uint8_t value) {
+void memWriteByte(uint32_t address, uint8_t value) {
   * (uint8_t *) getBufferAddress(address) = value;
 }
 
-int regRead(size_t index) {
+int regRead(uint32_t index) {
   if (index == 0) {
     return 0;
   }
@@ -108,7 +108,7 @@ int regRead(size_t index) {
   }
 }
 
-void regWrite(size_t index, int value) {
+void regWrite(uint32_t index, int value) {
   if (index > 0 && index < 32) {
     registerFile.X[index] = value;
   }
@@ -116,7 +116,7 @@ void regWrite(size_t index, int value) {
 
 int bits(int source, int high, int low) {
   int width = high - low + 1;
-  int mask = (1 << width) - 1;
+  int mask = (1L << width) - 1;
   return (source >> low) & mask;
 }
 
@@ -124,7 +124,7 @@ int bit(int source, int index) {
   return (source >> index) & 1;
 }
 
-int ubits(int source, int high, int low) {
+int sbits(int source, int high, int low) {
   return bits(source, high - 1, low) - (bit(source, high) << (high - low));
 }
 
@@ -217,7 +217,7 @@ struct Itype parseItype(int instruction){
   parsed.rd = bits(instruction,11,7);
   parsed.funct3 = bits(instruction,14,12);
   parsed.rs1 = bits(instruction,19,15);
-  parsed.imm = ubits(instruction, 31, 20);
+  parsed.imm = sbits(instruction, 31, 20);
   return parsed;
 }
 
@@ -226,7 +226,7 @@ struct Stype parseStype(int instruction){
   parsed.funct3 = bits(instruction,14,12);
   parsed.rs1 = bits(instruction,19,15);
   parsed.rs2 = bits(instruction,24,20);
-  parsed.imm = (ubits(instruction,31,25) << 5) | (bits(instruction, 11, 7));
+  parsed.imm = (sbits(instruction,31,25) << 5) | (bits(instruction, 11, 7));
   return parsed;
 }
 
@@ -242,7 +242,7 @@ struct Btype parseBtype(int instruction){
 struct Utype parseUtype(int instruction){
   struct Utype parsed;
   parsed.rd = bits(instruction,11,7);
-  parsed.imm = ubits(instruction,31,12) << 12;
+  parsed.imm = sbits(instruction,31,12) << 12;
   return parsed;
 }
 
@@ -292,36 +292,25 @@ void executeMathImm(struct Itype instruction) {
 
 void executeLoad(struct Itype instruction) {
   int address = regRead(instruction.rs1)+instruction.imm;
-  int result = memReadWord(address); 
+  int result = memReadWord(address);
   switch(instruction.funct3){
     case 0b000: // lb
-      result = bits(result,7,0); break;
+      result = sbits(result,7,0); break;
     case 0b001: // lh
-      result = bits(result,15,0); break;
+      result = sbits(result,15,0); break;
     case 0b010: // lw
       result = bits(result,31,0); break;
     case 0b100: // lbu
-      result = ubits(result,7,0); break;
+      result = bits(result,7,0); break;
     case 0b101: // lhu
-      result = ubits(result,15,0); break;
-  } 
+      result = bits(result,15,0); break;
+    default: printf("Unkown Load funct3=%d\n", instruction.funct3); exit(1);
+  }
   regWrite(instruction.rd, result);
 }
 
-void executeJALR(struct Itype instruction) {
-
-}
-
-void executeEcall(struct Itype instruction) {
-  int a7 = regRead(17);
-  switch (a7) {
-    case 10: successfullExit(); 
-    default: printf("Unkown Ecall: a7=%d\n", a7); exit(1);
-  }
-}
-
 void executeStore(struct Stype instruction) {
-  int address = regRead(instruction.rs1)+instruction.imm; 
+  int address = regRead(instruction.rs1)+instruction.imm;
   int data = regRead(instruction.rs2);
   switch(instruction.funct3){
     case 0b000: // sb
@@ -364,15 +353,29 @@ void executeBranch(struct Btype instruction) {
 }
 
 void executeAUIPC(struct Utype instruction) {
-
+  regWrite(instruction.rd, registerFile.PC + instruction.imm);
 }
 
 void executeLUI(struct Utype instruction) {
-
+  regWrite(instruction.rd, instruction.imm);
 }
 
 void executeJAL(struct Jtype instruction) {
+  regWrite(instruction.rd, registerFile.PC + 4);
+  registerFile.PC += instruction.imm;
+}
 
+void executeJALR(struct Itype instruction) {
+  regWrite(instruction.rd, registerFile.PC + 4);
+  registerFile.PC = regRead(instruction.rs1) + instruction.imm;
+}
+
+void executeEcall(struct Itype instruction) {
+  int a7 = regRead(17);
+  switch (a7) {
+    case 10: successfullExit(); 
+    default: printf("Unkown Ecall: a7=%d\n", a7); exit(1);
+  }
 }
 
 void execute(int instruction){
@@ -417,16 +420,19 @@ int main(int argc, char *argv[]) {
   while (1) {
     int PC = registerFile.PC;
     int instruction = memReadWord(PC);
-    printf("%4d: 0x%08x\n", PC, instruction);
+    printf("%4x: 0x%08x\n", PC, instruction);
     execute(instruction);
     if (PC == registerFile.PC) {
       registerFile.PC += 4;
     }
 
-    if (++i > 10000) {
+    if (++i > 100000) {
       printf("Maximum clock cycles reached!\n");
       exit(1);
     }
+
+    // printRegisterFile();
+    // getchar();
   }
 
   printf("Reached end of file\n");
