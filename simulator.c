@@ -211,6 +211,7 @@ struct Rtype parseRtype(int instruction){
   parsed.funct7 = bits(instruction,31,25);
   return parsed;
 }
+
 struct Itype parseItype(int instruction){
   struct Itype parsed;
   parsed.rd = bits(instruction,11,7);
@@ -219,14 +220,16 @@ struct Itype parseItype(int instruction){
   parsed.imm = ubits(instruction, 31, 20);
   return parsed;
 }
+
 struct Stype parseStype(int instruction){
   struct Stype parsed;
   parsed.funct3 = bits(instruction,14,12);
   parsed.rs1 = bits(instruction,19,15);
   parsed.rs2 = bits(instruction,24,20);
-  parsed.imm = bits(instruction,31,25);
+  parsed.imm = (ubits(instruction,31,25) << 5) | (bits(instruction, 11, 7));
   return parsed;
 }
+
 struct Btype parseBtype(int instruction){
   struct Btype parsed;
   parsed.funct3 = bits(instruction,14,12);
@@ -235,37 +238,39 @@ struct Btype parseBtype(int instruction){
   parsed.imm = -(bit(instruction, 31) << 12) | (bit(instruction, 7) << 11) | (bits(instruction, 30, 25) << 5) | (bits(instruction, 11, 8) << 1);
   return parsed;
 }
+
 struct Utype parseUtype(int instruction){
   struct Utype parsed;
   parsed.rd = bits(instruction,11,7);
-  parsed.imm = bits(instruction,31,12);
+  parsed.imm = ubits(instruction,31,12) << 12;
   return parsed;
 }
+
 struct Jtype parseJtype(int instruction){
   struct Jtype parsed;
   parsed.rd = bits(instruction,11,7);
-  parsed.imm = bits(instruction,31,12);
+  parsed.imm = -(bit(instruction, 31) << 20) | (bits(instruction, 19, 12) << 12) | (bit(instruction, 20) << 11) | (bits(instruction, 30, 21) << 1);
   return parsed;
 }
 
 int ALU(int funct3, int funct7, int operand1, int operand2) {
   switch (funct3) {
-    // add / sub
-    case 0b000: return bit(funct7, 5) ? operand1 - operand2 : operand1 + operand2;
-    // sll (shift left)
-    case 0b001: return operand1 << operand2;
-    // slt (set less than)
-    case 0b010: return (operand1 < operand2) ? 1 : 0;
-    // sltu (set less than unsigned)
-    case 0b011: return ((unsigned int) operand1 < (unsigned int) operand2) ? 1 : 0;
-    // xor
-    case 0b100: return operand1 ^ operand2;
-    // srl / sra
-    case 0b101: return bit(funct7, 5) ? operand1 >> operand2 : (unsigned int) operand1 >> (unsigned int) operand2;
-    // or
-    case 0b110: return operand1 | operand2;
-    // and
-    case 0b111: return operand1 & operand2;
+    case 0b000: // add / sub
+      return bit(funct7, 5) ? operand1 - operand2 : operand1 + operand2;
+    case 0b001: // sll (shift left)
+      return operand1 << bits(operand2, 5, 0);
+    case 0b010: // slt (set less than)
+      return (operand1 < operand2) ? 1 : 0;
+    case 0b011: // sltu (set less than unsigned)
+      return ((unsigned int) operand1 < (unsigned int) operand2) ? 1 : 0;
+    case 0b100: // xor
+      return operand1 ^ operand2;
+    case 0b101: // srl / sra
+      return bit(funct7, 5) ? operand1 >> bits(operand2, 5, 0) : (unsigned int) operand1 >> bits(operand2, 5, 0);
+    case 0b110: // or
+      return operand1 | operand2;
+    case 0b111: // and
+      return operand1 & operand2;
   }
 }
 
@@ -330,27 +335,27 @@ void executeStore(struct Stype instruction) {
 }
 
 void executeBranch(struct Btype instruction) {
-  int snirk = regRead(instruction.rs1);
-  int snask = regRead(instruction.rs2);
+  int value1 = regRead(instruction.rs1);
+  int value2 = regRead(instruction.rs2);
   int imm = instruction.imm;
   switch (instruction.funct3) {
     case 0b000: // BEQ
-      if (snirk == snask) registerFile.PC += imm;
+      if (value1 == value2) registerFile.PC += imm;
       break;
     case 0b001: // BNE
-      if (snirk != snask) registerFile.PC += imm;
+      if (value1 != value2) registerFile.PC += imm;
       break;
     case 0b100: // BLT
-      if (snirk < snask) registerFile.PC += imm;
+      if (value1 < value2) registerFile.PC += imm;
       break;
     case 0b101: // BGE
-      if (snirk >= snask) registerFile.PC += imm;
+      if (value1 >= value2) registerFile.PC += imm;
       break;
     case 0b110: // BLTU
-      if ((unsigned int)snirk < (unsigned int)snask) registerFile.PC += imm;
+      if ((unsigned int)value1 < (unsigned int)value2) registerFile.PC += imm;
       break;
     case 0b111: // BGEU
-      if ((unsigned int)snirk >= (unsigned int)snask) registerFile.PC += imm;
+      if ((unsigned int)value1 >= (unsigned int)value2) registerFile.PC += imm;
       break;
     default:
       printf("Unknown branch funct3: 0x%02x\n", instruction.funct3);
@@ -410,12 +415,13 @@ int main(int argc, char *argv[]) {
 
   int i = 0;
   while (1) {
-    int instruction = memReadWord(registerFile.PC);
-    printf("%4d: 0x%08x\n", registerFile.PC, instruction);
-
+    int PC = registerFile.PC;
+    int instruction = memReadWord(PC);
+    printf("%4d: 0x%08x\n", PC, instruction);
     execute(instruction);
-
-    registerFile.PC += 4;
+    if (PC == registerFile.PC) {
+      registerFile.PC += 4;
+    }
 
     if (++i > 10000) {
       printf("Maximum clock cycles reached!\n");
