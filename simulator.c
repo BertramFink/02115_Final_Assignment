@@ -3,15 +3,23 @@
 #include <inttypes.h>
 #include <string.h>
 
-struct Memory {
-  size_t length;
-  uint8_t buffer[];
+struct Block {
+  uint8_t buffer[1 << 16];
 };
+
+struct Memory {
+  struct Block *blocks[1 << 16];
+} memory;
 
 struct RegisterFile {
   int PC;
-  int GP[32];
-};
+  int X[32];
+} registerFile;
+
+struct ResultsFile {
+  int valid;
+  int X[32];
+} resultsFile;
 
 struct Rtype
 {
@@ -21,6 +29,7 @@ struct Rtype
   int rs2;
   int funct7;
 };
+
 struct Itype
 {
   int rd;
@@ -28,6 +37,7 @@ struct Itype
   int rs1;
   int imm;
 };
+
 struct Stype
 {
   int rd;
@@ -36,6 +46,7 @@ struct Stype
   int rs2;
   int imm;
 };
+
 struct Btype
 {
   int rd;
@@ -44,44 +55,38 @@ struct Btype
   int rs2;
   int imm;
 };
+
 struct Utype
 {
   int rd;
   int imm;
 };
+
 struct Jtype
 {
   int rd;
   int imm;
 };
 
-struct Instruction
-{
-  int opcode;
-  int opcodeInstruction[7];
-  int instruction[32];
-};
-
-struct Memory *iMem;
-
-struct RegisterFile *rf;
-
-// #define REG_FILE_LENGTH (32*4)
-// char resultsFile[REG_FILE_LENGTH]; 
-
-struct RegisterFile *resultsFile;
-
-
-int memRead(struct Memory *memory, size_t index) {
-  if (index < memory->length) {
-    return * (int *) &memory->buffer[index];
+int memRead(size_t address) {
+  int addr_hi = address >> 16;
+  int addr_lo = address & 0xffff;
+  struct Block *block = memory.blocks[addr_hi];
+  if (block == NULL) {
+    return 0;
   }
+  return * (int *) &block->buffer[addr_lo];
 }
 
-void memWrite(struct Memory *memory, size_t index, int value) {
-  if (index < memory->length) {
-    * (int *) &memory->buffer[index] = value;
+void memWrite(size_t address, int value) {
+  int addr_hi = address >> 16;
+  int addr_lo = address & 0xffff;
+  struct Block *block = memory.blocks[addr_hi];
+  if (block == NULL) {
+    block = calloc(1, sizeof(struct Block));
+    memory.blocks[addr_hi] = block;
   }
+  * (int *) &block->buffer[addr_lo] = value;
 }
 
 int regRead(size_t index) {
@@ -89,13 +94,13 @@ int regRead(size_t index) {
     return 0;
   }
   if (index < 32) {
-    return rf->GP[index];
+    return registerFile.X[index];
   }
 }
 
 void regWrite(size_t index, int value) {
   if (index > 0 && index < 32) {
-    rf->GP[index] = value;
+    registerFile.X[index] = value;
   }
 }
 
@@ -113,7 +118,7 @@ int ubits(int source, int high, int low) {
   return bits(source, high - 1, low) - (bit(source, high) << (high - low));
 }
 
-void initIMem(char *fileName) {
+void initInstMem(char *fileName) {
   FILE *file = fopen(fileName, "rb");
   if (file == NULL) {
     perror("Error opening file");
@@ -122,17 +127,19 @@ void initIMem(char *fileName) {
   fseek(file, 0, SEEK_END);
   int length = ftell(file);
   fseek(file, 0, SEEK_SET);
-  iMem = (struct Memory*) malloc(sizeof(struct Memory) + length);
-  iMem->length = length;
-  int i = fread(iMem->buffer, 1, length, file);
+  int *buffer = (int *) malloc(length);
+  int i = fread(buffer, 1, length, file);
   if (i != length) {
     perror("Error reading file");
     exit(1);
   }
+  for (i = 0; i < length; i += 4) {
+    memWrite(i, buffer[i/4]);
+  }
 }
 
 void prepareResults(char *fileName) {
-  resultsFile = NULL;
+  resultsFile.valid = 0;
   char *point = strrchr(fileName, '.');
   if (point == NULL) {
     printf("[WARNING] No results file found\n\n");
@@ -146,16 +153,16 @@ void prepareResults(char *fileName) {
     printf("[WARNING] No results file found\n\n");
     return;
   }
-  resultsFile = (struct RegisterFile *) malloc(sizeof(struct RegisterFile));
-  int i = fread(resultsFile->GP, 1, sizeof(resultsFile->GP), file);
-  if (i != sizeof(resultsFile->GP)) {
+  int i = fread(resultsFile.X, 1, sizeof(resultsFile.X), file);
+  if (i != sizeof(resultsFile.X)) {
     perror("Error reading results file");
     exit(1);
   }
+  resultsFile.valid = 1;
 }
 
 void printRegisterFile() {
-  printf("\nRegister Content:\n PC=0x%08x\n", rf->PC);
+  printf("\nRegister Content:\n PC=0x%08x\n", registerFile.PC);
   for (int j = 0; j < 32; j += 4) {
     for (int i = 0; i < 4; i ++) { 
       int n = i + j;
@@ -166,10 +173,10 @@ void printRegisterFile() {
 }
 
 void successfullExit() {
-  if (resultsFile == NULL) {
+  if (!resultsFile.valid) {
     exit(0);
   }
-  if (memcmp(rf->GP, resultsFile->GP, sizeof(resultsFile->GP)) == 0) {
+  if (memcmp(registerFile.X, resultsFile.X, sizeof(resultsFile.X)) == 0) {
     printf("\nRegisterfile is identical to expected result\n");
     exit(0);
   } else {
@@ -177,38 +184,13 @@ void successfullExit() {
     for (int j = 0; j < 32; j += 4) {
       for (int i = 0; i < 4; i ++) { 
         int n = i + j;
-        printf("%sx%d=0x%08x   ", n < 10 ? " " : "", n, resultsFile->GP[n]);
+        printf("%sx%d=0x%08x   ", n < 10 ? " " : "", n, resultsFile.X[n]);
       }
       printf("\n");
     }
     exit(1);
   }
 }
-
-struct Instruction getInstruction(struct Memory* mem, int pc){
-  struct Instruction current;
-  int num = mem->buffer[0+pc]+(mem->buffer[1+4*pc]<<8)+(mem->buffer[2+4*pc]<<16)+(mem->buffer[3+4*pc]<<24);
-  for(int i = 0;i<=31;i++){
-    current.instruction[i] = (num >> i) & 1;
-  }
-  for(int i = 0 ;i<=6;i++){
-    current.opcodeInstruction[i] = (num >> i) & 1;
-  }
-  return current;
-} 
-
-void printInstruction(struct Instruction current){
-  printf("Full instruction:\n");
-  for(int i = 31; i >= 0 ;i--) {
-     printf("%d",current.instruction[i]);
-  }
-  printf("\nOpcode: \n");
-  for(int i = 6; i >= 0 ;i--) {
-     printf("%d",current.opcodeInstruction[i]);
-  }
-  printf("\n");
-}
-
 
 struct Rtype parseRtype(int instruction){
   struct Rtype parsed;
@@ -297,31 +279,20 @@ void executeMathImm(struct Itype instruction) {
 
 void executeLoad(struct Itype instruction) {
   int address = regRead(instruction.rs1)+instruction.imm;
-  int M = memRead(iMem,address); 
-  int result;
+  int result = memRead(address); 
   switch(instruction.funct3){
-    case 0b000:
-    result = bits(M,7,0);
-    break;
-
-    case 0b001:
-    result = bits(M,15,0);
-    break;
-
-    case 0b010:
-    result = bits(M,31,0);
-    break;
-
-    case 0b100:
-    result = ubits(M,7,0); 
-    break;
-
-    case 0b101:
-    result = ubits(M,15,0);
-    break;
+    // lb
+    case 0b000: result = bits(result,7,0); break;
+    // lh
+    case 0b001: result = bits(result,15,0); break;
+    // lw
+    case 0b010: result = bits(result,31,0); break;
+    // lbu
+    case 0b100: result = ubits(result,7,0); break;
+    // lhu
+    case 0b101: result = ubits(result,15,0); break;
   } 
   regWrite(instruction.rd, result);
-
 }
 
 void executeJALR(struct Itype instruction) {
@@ -388,20 +359,19 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  initIMem(argv[1]);
+  initInstMem(argv[1]);
   prepareResults(argv[1]);
-  rf = (struct RegisterFile *) calloc(sizeof(struct RegisterFile), 1);
-  rf->PC = 0;
+  registerFile.PC = 0;
 
   atexit(printRegisterFile);
 
-  while (rf->PC < iMem->length) {
-    int instruction = memRead(iMem, rf->PC);
-    printf("%4d: 0x%08x\n", rf->PC, instruction);
+  while (1) {
+    int instruction = memRead(registerFile.PC);
+    printf("%4d: 0x%08x\n", registerFile.PC, instruction);
 
     execute(instruction);
 
-    rf->PC += 4;
+    registerFile.PC += 4;
   }
 
   printf("Reached end of file\n");
