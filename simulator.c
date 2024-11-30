@@ -205,13 +205,6 @@ void printInstruction(struct Instruction current){
   printf("\n");
 }
 
-// int binToDec(int bin[],int size){
-//   int sum = 0;
-//   for(int i = 0; i<size;i++){
-//     sum += bin[i]*pow(2,i);
-//   }
-//   return sum;
-// }
 
 struct Rtype parseRtype(int instruction){
   struct Rtype parsed;
@@ -299,6 +292,31 @@ void executeMathImm(struct Itype instruction) {
 }
 
 void executeLoad(struct Itype instruction) {
+  int address = regRead(instruction.rs1)+instruction.imm;
+  int M = memRead(iMem,address); 
+  int result;
+  switch(instruction.funct3){
+    case 0b000:
+    result = bits(M,7,0);
+    break;
+
+    case 0b001:
+    result = bits(M,15,0);
+    break;
+
+    case 0b010:
+    result = bits(M,31,0);
+    break;
+
+    case 0b100:
+    result = ubits(M,7,0); 
+    break;
+
+    case 0b101:
+    result = ubits(M,15,0);
+    break;
+  } 
+  regWrite(instruction.rd, result);
 
 }
 
