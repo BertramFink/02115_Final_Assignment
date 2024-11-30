@@ -109,6 +109,10 @@ int bit(int source, int index) {
   return (source >> index) & 1;
 }
 
+int ubits(int source, int high, int low) {
+  return bits(source, high - 1, low) - (bit(source, high) << (high - low));
+}
+
 void initIMem(char *fileName) {
   FILE *file = fopen(fileName, "rb");
   if (file == NULL) {
@@ -227,7 +231,7 @@ struct Itype parseItype(int instruction){
   parsed.rd = bits(instruction,11,7);
   parsed.funct3 = bits(instruction,14,12);
   parsed.rs1 = bits(instruction,19,15);
-  parsed.imm = bits(instruction,30,20) - (bit(instruction,31) << 11);
+  parsed.imm = ubits(instruction, 31, 20);
   return parsed;
 }
 struct Stype parseStype(int instruction){
