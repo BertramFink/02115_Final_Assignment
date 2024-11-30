@@ -68,17 +68,17 @@ struct Jtype
   int imm;
 };
 
-int memRead(size_t address) {
+uint32_t memReadWord(size_t address) {
   int addr_hi = address >> 16;
   int addr_lo = address & 0xffff;
   struct Block *block = memory.blocks[addr_hi];
   if (block == NULL) {
     return 0;
   }
-  return * (int *) &block->buffer[addr_lo];
+  return * (uint32_t *) &block->buffer[addr_lo];
 }
 
-void memWrite(size_t address, int value) {
+uint8_t *getBufferAddress(size_t address) {
   int addr_hi = address >> 16;
   int addr_lo = address & 0xffff;
   struct Block *block = memory.blocks[addr_hi];
@@ -86,7 +86,19 @@ void memWrite(size_t address, int value) {
     block = calloc(1, sizeof(struct Block));
     memory.blocks[addr_hi] = block;
   }
-  * (int *) &block->buffer[addr_lo] = value;
+  return &block->buffer[addr_lo];
+}
+
+void memWriteWord(size_t address, uint32_t value) {
+  * (uint32_t *) getBufferAddress(address) = value;
+}
+
+void memWriteHalfWord(size_t address, uint16_t value) {
+  * (uint16_t *) getBufferAddress(address) = value;
+}
+
+void memWriteByte(size_t address, uint8_t value) {
+  * (uint8_t *) getBufferAddress(address) = value;
 }
 
 int regRead(size_t index) {
@@ -134,7 +146,7 @@ void initInstMem(char *fileName) {
     exit(1);
   }
   for (i = 0; i < length; i += 4) {
-    memWrite(i, buffer[i/4]);
+    memWriteWord(i, buffer[i/4]);
   }
 }
 
@@ -279,7 +291,7 @@ void executeMathImm(struct Itype instruction) {
 
 void executeLoad(struct Itype instruction) {
   int address = regRead(instruction.rs1)+instruction.imm;
-  int result = memRead(address); 
+  int result = memReadWord(address); 
   switch(instruction.funct3){
     // lb
     case 0b000: result = bits(result,7,0); break;
@@ -366,7 +378,7 @@ int main(int argc, char *argv[]) {
   atexit(printRegisterFile);
 
   while (1) {
-    int instruction = memRead(registerFile.PC);
+    int instruction = memReadWord(registerFile.PC);
     printf("%4d: 0x%08x\n", registerFile.PC, instruction);
 
     execute(instruction);
