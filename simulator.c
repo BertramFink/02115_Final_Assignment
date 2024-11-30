@@ -40,7 +40,6 @@ struct Itype
 
 struct Stype
 {
-  int rd;
   int funct3;
   int rs1;
   int rs2;
@@ -49,7 +48,6 @@ struct Stype
 
 struct Btype
 {
-  int rd;
   int funct3;
   int rs1;
   int rs2;
@@ -223,7 +221,6 @@ struct Itype parseItype(int instruction){
 }
 struct Stype parseStype(int instruction){
   struct Stype parsed;
-  parsed.rd = bits(instruction,11,7);
   parsed.funct3 = bits(instruction,14,12);
   parsed.rs1 = bits(instruction,19,15);
   parsed.rs2 = bits(instruction,24,20);
@@ -232,7 +229,6 @@ struct Stype parseStype(int instruction){
 }
 struct Btype parseBtype(int instruction){
   struct Btype parsed;
-  parsed.rd = bits(instruction,11,7);
   parsed.funct3 = bits(instruction,14,12);
   parsed.rs1 = bits(instruction,19,15);
   parsed.rs2 = bits(instruction,24,20);
@@ -293,16 +289,16 @@ void executeLoad(struct Itype instruction) {
   int address = regRead(instruction.rs1)+instruction.imm;
   int result = memReadWord(address); 
   switch(instruction.funct3){
-    // lb
-    case 0b000: result = bits(result,7,0); break;
-    // lh
-    case 0b001: result = bits(result,15,0); break;
-    // lw
-    case 0b010: result = bits(result,31,0); break;
-    // lbu
-    case 0b100: result = ubits(result,7,0); break;
-    // lhu
-    case 0b101: result = ubits(result,15,0); break;
+    case 0b000: // lb
+      result = bits(result,7,0); break;
+    case 0b001: // lh
+      result = bits(result,15,0); break;
+    case 0b010: // lw
+      result = bits(result,31,0); break;
+    case 0b100: // lbu
+      result = ubits(result,7,0); break;
+    case 0b101: // lhu
+      result = ubits(result,15,0); break;
   } 
   regWrite(instruction.rd, result);
 }
@@ -320,7 +316,17 @@ void executeEcall(struct Itype instruction) {
 }
 
 void executeStore(struct Stype instruction) {
-
+  int address = regRead(instruction.rs1)+instruction.imm; 
+  int data = regRead(instruction.rs2);
+  switch(instruction.funct3){
+    case 0b000: // sb
+      return memWriteByte(address, data);
+    case 0b001: // sh
+      return memWriteHalfWord(address, data);
+    case 0b010: // sw
+      return memWriteWord(address, data);
+    default: printf("Unkown Store funct3=%d\n", instruction.funct3); exit(1);
+  } 
 }
 
 void executeBranch(struct Btype instruction) {
