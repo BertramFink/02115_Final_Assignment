@@ -372,9 +372,39 @@ void executeJALR(struct Itype instruction) {
 
 void executeEcall(struct Itype instruction) {
   int a7 = regRead(17);
+  int a0 = regRead(10);
   switch (a7) {
-    case 10: successfullExit(); 
-    default: printf("Unkown Ecall: a7=%d\n", a7); exit(1);
+    case 1:
+      printf("%d", a0);
+      break;
+    case 2:
+      printf("%f", * (float *) &a0);
+      break;
+    case 4:
+      printf("%s", (char *) getBufferAddress(a0));
+      break;
+    case 10: 
+      successfullExit(); 
+    case 11:
+      printf("%c", (char) a0);
+      break;
+    case 34:
+      printf("%x", a0);
+      break;
+    case 35:
+      for (int i = 31; i >= 0; i --) {
+        printf("%d", (a0 >> i) & 1);
+      }
+      break;
+    case 36:
+      printf("%d", (unsigned int) a0);
+      break;
+    case 93:
+      printf("Program exited with status code: %d\n", a0);
+      successfullExit();
+    default: 
+      printf("Unkown Ecall: a7=%d\n", a7); 
+      exit(1);
   }
 }
 
@@ -430,9 +460,6 @@ int main(int argc, char *argv[]) {
       printf("Maximum clock cycles reached!\n");
       exit(1);
     }
-
-    // printRegisterFile();
-    // getchar();
   }
 
   printf("Reached end of file\n");
