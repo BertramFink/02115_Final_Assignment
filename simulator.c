@@ -410,7 +410,7 @@ void executeEcall(struct Itype instruction) {
       }
       break;
     case 36:
-      printf("%d", (unsigned int) a0);
+      printf("%u", a0);
       break;
     case 93:
       printf("Program exited with status code: %d\n", a0);
@@ -431,8 +431,6 @@ void execute(int instruction){
     case 0b0010011: return executeMathImm(parseItype(instruction));
     case 0b1100111: return executeJALR(parseItype(instruction));
     case 0b1110011: return executeEcall(parseItype(instruction));
-    // case 105: break; Eksisterer ikke
-    // case 23: break; Eksisterer ikke
     // S Type:
     case 0b0100011: return executeStore(parseStype(instruction));
     // B Type:
