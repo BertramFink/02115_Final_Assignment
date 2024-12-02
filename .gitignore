@@ -3,5 +3,7 @@
 !/TO-DO.txt
 !/tests
 !/tests/**
+!test_final_proj
+!*.sh
 !*.c
 !Makefile
