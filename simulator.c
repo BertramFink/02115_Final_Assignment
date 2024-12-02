@@ -182,7 +182,21 @@ void printRegisterFile() {
   }
 }
 
+void saveRegisterFile() {
+  FILE *file = fopen("output.res", "wb");
+  if (file == NULL) {
+    perror("Error opening output.res file");
+    exit(1);
+  }
+  int i = fwrite(registerFile.X, 1, sizeof(registerFile.X), file);
+  if (i != sizeof(registerFile.X)) {
+    perror("Error writing to output.res");
+    exit(1);
+  }
+}
+
 void successfullExit() {
+  saveRegisterFile();
   if (!resultsFile.valid) {
     exit(0);
   }
