@@ -17,6 +17,7 @@ The binary dump of the registers will be outputted in "output.res"
 
 ## Running the tester
 The tester can be used to run all RISC-V binaries in directory tests/
+
 To run the tester use:
 ```
 ./tester
