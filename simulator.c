@@ -196,7 +196,6 @@ void saveRegisterFile() {
 }
 
 void successfullExit() {
-  saveRegisterFile();
   if (!resultsFile.valid) {
     exit(0);
   }
@@ -459,6 +458,7 @@ int main(int argc, char *argv[]) {
   registerFile.PC = 0;
 
   atexit(printRegisterFile);
+  atexit(saveRegisterFile);
 
   int i = 0;
   while (1) {
