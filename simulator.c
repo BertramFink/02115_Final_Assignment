@@ -114,7 +114,7 @@ void regWrite(uint32_t index, int value) {
   }
 }
 
-int bits(int source, int high, int low) {
+int  bits(int source, int high, int low) {
   int width = high - low + 1;
   int mask = (1L << width) - 1;
   return (source >> low) & mask;
@@ -475,9 +475,5 @@ int main(int argc, char *argv[]) {
       exit(1);
     }
   }
-
-  printf("Reached end of file\n");
-  successfullExit();
-  
   return 0;
 }
