@@ -4,6 +4,7 @@
 !/tests
 !/tests/**
 !test_final_proj
+!/README.md
 !*.sh
 !*.c
 !Makefile
